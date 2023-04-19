@@ -392,87 +392,87 @@ namespace GPU_SGD
 
 
         }
-        //Non GPU Sgd
-        public void SGDfit(int epochs, int batch, double learning_rate=0.01){
-            Accelerator accelerate = this.dev.CreateAccelerator(this.context);
-            this.weights = new double[this.arr.GetLength(1)];
-            //this.weights = InitializeGaussian(this.weights);
-            //print1d(this.weights);\
-            int m = this.arr.GetLength(0);
-            int n = this.arr.GetLength(1);
-            Index2D sub2d = new Index2D(batch, n);
-            Index1D mInd = new Index1D(m);
-            Index1D nInd = new Index1D(n);
-            Index1D batchInd = new Index1D(batch);
+       
+        // public void SGDfit(int epochs, int batch, double learning_rate=0.01){
+        //     Accelerator accelerate = this.dev.CreateAccelerator(this.context);
+        //     this.weights = new double[this.arr.GetLength(1)];
+        //     //this.weights = InitializeGaussian(this.weights);
+        //     //print1d(this.weights);\
+        //     int m = this.arr.GetLength(0);
+        //     int n = this.arr.GetLength(1);
+        //     Index2D sub2d = new Index2D(batch, n);
+        //     Index1D mInd = new Index1D(m);
+        //     Index1D nInd = new Index1D(n);
+        //     Index1D batchInd = new Index1D(batch);
 
-            var XBuffer = accelerate.Allocate2DDenseX<double>(new Index2D(m,n));
-            //var SubXBuffer = accelerate.Allocate2DDenseX<double>(sub2d);
+        //     var XBuffer = accelerate.Allocate2DDenseX<double>(new Index2D(m,n));
+        //     //var SubXBuffer = accelerate.Allocate2DDenseX<double>(sub2d);
 
-            var YBuffer = accelerate.Allocate1D<double>(mInd);
-            //var SubYBuffer = accelerate.Allocate1D<double>(batchInd);
-            var WeightsBuffer = accelerate.Allocate1D<double>(nInd);
-            var gradBuffer = accelerate.Allocate1D<double>(nInd);
-            var errorBuffer = accelerate.Allocate1D<double>(mInd);
-            //var SuberrorBuffer = accelerate.Allocate1D<double>(batchInd);
+        //     var YBuffer = accelerate.Allocate1D<double>(mInd);
+        //     //var SubYBuffer = accelerate.Allocate1D<double>(batchInd);
+        //     var WeightsBuffer = accelerate.Allocate1D<double>(nInd);
+        //     var gradBuffer = accelerate.Allocate1D<double>(nInd);
+        //     var errorBuffer = accelerate.Allocate1D<double>(mInd);
+        //     //var SuberrorBuffer = accelerate.Allocate1D<double>(batchInd);
 
-            Random rand = new Random();
+        //     Random rand = new Random();
 
-            XBuffer.CopyFromCPU(this.arr);
-            YBuffer.CopyFromCPU(this.y);
-            WeightsBuffer.CopyFromCPU(this.weights);
-            var setBuffToValueKern = accelerate.LoadAutoGroupedStreamKernel<
-                Index1D,
-                ArrayView1D<double, Stride1D.Dense>,
-                double>(setBuffToValueKernal);
-            var GradientKern = accelerate.LoadAutoGroupedStreamKernel<
-                Index2D,
-                ArrayView2D<double, Stride2D.DenseX>,
-                ArrayView1D<double, Stride1D.Dense> ,
-                ArrayView1D<double, Stride1D.Dense> , int
-                >(GradKernal);
-            var ThetaKern = accelerate.LoadAutoGroupedStreamKernel<
-                Index1D,
-                ArrayView1D<double, Stride1D.Dense>,
-                ArrayView1D<double, Stride1D.Dense> ,
-                double,
-                int>(ThetaKernal);
+        //     XBuffer.CopyFromCPU(this.arr);
+        //     YBuffer.CopyFromCPU(this.y);
+        //     WeightsBuffer.CopyFromCPU(this.weights);
+        //     var setBuffToValueKern = accelerate.LoadAutoGroupedStreamKernel<
+        //         Index1D,
+        //         ArrayView1D<double, Stride1D.Dense>,
+        //         double>(setBuffToValueKernal);
+        //     var GradientKern = accelerate.LoadAutoGroupedStreamKernel<
+        //         Index2D,
+        //         ArrayView2D<double, Stride2D.DenseX>,
+        //         ArrayView1D<double, Stride1D.Dense> ,
+        //         ArrayView1D<double, Stride1D.Dense> , int
+        //         >(GradKernal);
+        //     var ThetaKern = accelerate.LoadAutoGroupedStreamKernel<
+        //         Index1D,
+        //         ArrayView1D<double, Stride1D.Dense>,
+        //         ArrayView1D<double, Stride1D.Dense> ,
+        //         double,
+        //         int>(ThetaKernal);
 
-            var errorKern = accelerate.LoadAutoGroupedStreamKernel<Index2D,
-                ArrayView2D<double, Stride2D.DenseX>,
-                ArrayView1D<double, Stride1D.Dense> ,
-                ArrayView1D<double, Stride1D.Dense> ,
-                ArrayView1D<double, Stride1D.Dense> ,
-                int>(errorKernal);
-            //print2d(XBuffer.View.SubView((0,0), (batch,n)).GetAsArray2D());
-            //Console.ReadLine();
+        //     var errorKern = accelerate.LoadAutoGroupedStreamKernel<Index2D,
+        //         ArrayView2D<double, Stride2D.DenseX>,
+        //         ArrayView1D<double, Stride1D.Dense> ,
+        //         ArrayView1D<double, Stride1D.Dense> ,
+        //         ArrayView1D<double, Stride1D.Dense> ,
+        //         int>(errorKernal);
+        //     //print2d(XBuffer.View.SubView((0,0), (batch,n)).GetAsArray2D());
+        //     //Console.ReadLine();
             
-            for(int i = 0; i < epochs; i++){
-                int index = rand.Next(m-batch);
+        //     for(int i = 0; i < epochs; i++){
+        //         int index = rand.Next(m-batch);
                 
-                var SubXBuffer = XBuffer.View.SubView((index,0), (batch,n));
-                var SuberrorBuffer = errorBuffer.View.SubView(index, batch);
-                setBuffToValueKern(gradBuffer.Extent.ToIntIndex(), gradBuffer.View, 0.0);
-                setBuffToValueKern(errorBuffer.Extent.ToIntIndex(), errorBuffer.View, 0.0);
-                //errorKern(sub2d, XBuffer.View.SubView((index,0), (batch,n)), WeightsBuffer.View, errorBuffer.View.SubView(index, batch), YBuffer.View.SubView(index, batch), n);
-                errorKern(sub2d, SubXBuffer, WeightsBuffer.View, SuberrorBuffer, YBuffer.View.SubView(index, batch), n);
+        //         var SubXBuffer = XBuffer.View.SubView((index,0), (batch,n));
+        //         var SuberrorBuffer = errorBuffer.View.SubView(index, batch);
+        //         setBuffToValueKern(gradBuffer.Extent.ToIntIndex(), gradBuffer.View, 0.0);
+        //         setBuffToValueKern(errorBuffer.Extent.ToIntIndex(), errorBuffer.View, 0.0);
+        //         //errorKern(sub2d, XBuffer.View.SubView((index,0), (batch,n)), WeightsBuffer.View, errorBuffer.View.SubView(index, batch), YBuffer.View.SubView(index, batch), n);
+        //         errorKern(sub2d, SubXBuffer, WeightsBuffer.View, SuberrorBuffer, YBuffer.View.SubView(index, batch), n);
 
-                    // Console.WriteLine("errorBuffer");
-                    // print1d(errorBuffer.GetAsArray1D());
-                GradientKern(sub2d, SubXBuffer, SuberrorBuffer, gradBuffer.View, batch);
-                    // Console.WriteLine("gradBuffer");
-                    // print1d(gradBuffer.GetAsArray1D());
-                    //accelerate.Synchronize();
-                ThetaKern(WeightsBuffer.Extent.ToIntIndex(), WeightsBuffer.View, gradBuffer.View, learning_rate,batch);
+        //             // Console.WriteLine("errorBuffer");
+        //             // print1d(errorBuffer.GetAsArray1D());
+        //         GradientKern(sub2d, SubXBuffer, SuberrorBuffer, gradBuffer.View, batch);
+        //             // Console.WriteLine("gradBuffer");
+        //             // print1d(gradBuffer.GetAsArray1D());
+        //             //accelerate.Synchronize();
+        //         ThetaKern(WeightsBuffer.Extent.ToIntIndex(), WeightsBuffer.View, gradBuffer.View, learning_rate,batch);
                 
                 
-                // Console.WriteLine("WeightsBuffer");
-                // print1d(WeightsBuffer.GetAsArray1D());
+        //         // Console.WriteLine("WeightsBuffer");
+        //         // print1d(WeightsBuffer.GetAsArray1D());
 
-            }
-            this.weights = WeightsBuffer.GetAsArray1D();
+        //     }
+        //     this.weights = WeightsBuffer.GetAsArray1D();
 
 
-        }
+        // }
         public double[] getWeights(){
             return this.weights;
         }
