@@ -201,6 +201,7 @@ namespace GPU_SGD
             }
             return weights;
         }
+        //GPU SGD final
         public double[] SGDgpu(double[,] X, double[] Y, double learningRate, int epochs, int batch){
             Accelerator accelerate = this.dev.CreateAccelerator(this.context);
             
@@ -391,6 +392,7 @@ namespace GPU_SGD
 
 
         }
+        //Non GPU Sgd
         public void SGDfit(int epochs, int batch, double learning_rate=0.01){
             Accelerator accelerate = this.dev.CreateAccelerator(this.context);
             this.weights = new double[this.arr.GetLength(1)];
